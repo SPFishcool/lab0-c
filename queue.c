@@ -94,8 +94,7 @@ element_t *q_remove_head(struct list_head *head, char *sp, size_t bufsize)
         return NULL;
     if (head->next != head) {
         struct list_head *indirect = head->next;
-        (indirect->prev)->next = (indirect->next);
-        (indirect->next)->prev = (indirect->prev);
+        list_del(indirect);
 
         element_t *ele = list_entry(indirect, element_t, list);
         if (sp)
@@ -112,8 +111,7 @@ element_t *q_remove_tail(struct list_head *head, char *sp, size_t bufsize)
         return NULL;
     if (head->next != head) {
         struct list_head *indirect = head->prev;
-        (indirect->prev)->next = (indirect->next);
-        (indirect->next)->prev = (indirect->prev);
+        list_del(indirect);
 
         element_t *ele = list_entry(indirect, element_t, list);
         if (sp)
@@ -147,8 +145,7 @@ bool q_delete_mid(struct list_head *head)
         left_node = left_node->next;
         right_node = right_node->prev;
     }
-    (right_node->next)->prev = right_node->prev;
-    (right_node->prev)->next = right_node->next;
+    list_del(right_node);
     q_release_element(list_entry(right_node, element_t, list));
     // https://leetcode.com/problems/delete-the-middle-node-of-a-linked-list/
     return true;
@@ -201,20 +198,11 @@ void q_swap(struct list_head *head)
 /* Reverse elements in queue */
 void q_reverse(struct list_head *head)
 {
-    if (head) {
-        struct list_head *indirect = head;
-        struct list_head *tmp;
-        tmp = indirect->next;
-        indirect->next = indirect->prev;
-        indirect->prev = tmp;
-        indirect = indirect->next;
-        while (indirect != head) {
-            tmp = indirect->next;
-            indirect->next = indirect->prev;
-            indirect->prev = tmp;
-            indirect = indirect->next;
-        }
-    }
+    if (!head || list_empty(head))
+        return;
+    struct list_head **indirect = &((head->next)->next);
+    while (*indirect != head)
+        list_move(*indirect, head);
 }
 
 /* Reverse the nodes of the list k at a time */
