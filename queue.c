@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <linux/kernel.h>
+
 #include "queue.h"
 
 /* Notice: sometimes, Cppcheck would find the potential NULL pointer bugs,
@@ -45,18 +47,17 @@ bool q_insert_head(struct list_head *head, char *s)
         return false;
 
     element_t *new_ele = malloc(sizeof(element_t));
-
+    int len = strlen(s);
     if (!new_ele)
         return false;
 
-    new_ele->value = (char *) malloc(strlen(s) * sizeof(char) + 1);
-
+    new_ele->value = (char *) malloc(len * sizeof(char) + 1);
     if (!new_ele->value) {
         free(new_ele);
         return false;
     }
 
-    strncpy(new_ele->value, s, strlen(s) + 1);
+    strncpy(new_ele->value, s, len + 1);
 
     // struct list_head *new_node = (new_ele -> list);
 
@@ -71,18 +72,19 @@ bool q_insert_tail(struct list_head *head, char *s)
         return false;
 
     element_t *new_ele = malloc(sizeof(element_t));
+    int len = strlen(s);
     if (!new_ele)
         return false;
-    struct list_head *prev_list = head->prev;
-    new_ele->value = (char *) malloc(sizeof(char) * strlen(s) + 1);
+
+    new_ele->value = (char *) malloc(sizeof(char) * len + 1);
     if (!new_ele->value) {
         free(new_ele);
         return false;
     }
-    strncpy(new_ele->value, s, strlen(s) + 1);
+    strncpy(new_ele->value, s, len + 1);
     // struct list_head *new_node = (new_ele -> list);
 
-    list_add(&new_ele->list, prev_list);
+    list_add_tail(&new_ele->list, head);
     return true;
 }
 
@@ -315,17 +317,19 @@ int q_descend(struct list_head *head)
 /* Merge all the queues into one sorted queue, which is in ascending order */
 int q_merge(struct list_head *head)
 {
+    if (!head || list_empty(head))
+        return 0;
+    else if (list_is_singular(head))
+        return list_entry(head->next, queue_contex_t, chain)->size;
     queue_contex_t *target = list_entry(head->next, queue_contex_t, chain);
     queue_contex_t *que = NULL;
     list_for_each_entry (que, head, chain) {
         if (que == target)
             continue;
-        list_splice(que->q, target->q);
+        list_splice_init(que->q, target->q);
         target->size = target->size + que->size;
-        que->q = NULL;
         que->size = 0;
     }
     q_sort(target->q);
-    // https://leetcode.com/problems/merge-k-sorted-lists/
     return target->size;
 }
