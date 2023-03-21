@@ -249,6 +249,30 @@ int q_cmp(void *priv, const struct list_head *a, const struct list_head *b)
                   list_entry(b, element_t, list)->value);
 }
 
+void swap(struct list_head *a, struct list_head *b)
+{
+    struct list_head *tmp = a->next;
+    list_move_tail(a, b);
+    list_move_tail(b, tmp);
+}
+
+void shuffle(struct list_head *head)
+{
+    if (!head || list_empty(head))
+        return;
+
+    int len = q_size(head);
+    struct list_head *tail = head->prev;
+    for (int i = len - 1; i > 0; i--) {
+        int count = rand() % i;
+        struct list_head *node = head->next;
+        for (int j = 1; j < count; j++)
+            node = node->next;
+        swap(tail, node);
+        tail = node->prev;
+    }
+}
+
 static bool do_free(int argc, char *argv[])
 {
     if (argc != 1) {
@@ -745,6 +769,27 @@ static bool do_reverse(int argc, char *argv[])
     return !error_check();
 }
 
+static bool do_shuffle(int argc, char *argv[])
+{
+    if (argc != 1) {
+        report(1, "%s takes no arguments", argv[0]);
+        return false;
+    }
+
+    if (!current || !current->q)
+        report(3, "Warning: Calling shuffle on null queue");
+    error_check();
+
+    set_noallocate_mode(true);
+    if (current && exception_setup(true))
+        shuffle(current->q);
+    exception_cancel();
+
+    set_noallocate_mode(false);
+    q_show(3);
+    return !error_check();
+}
+
 static bool do_size(int argc, char *argv[])
 {
     if (argc != 1 && argc != 2) {
@@ -1217,6 +1262,7 @@ static void console_init()
         rt,
         "Remove from tail of queue. Optionally compare to expected value str",
         "[str]");
+    ADD_COMMAND(shuffle, "shuffle queue.", "");
     ADD_COMMAND(reverse, "Reverse queue", "");
     ADD_COMMAND(sort, "Sort queue in ascending order", "");
     ADD_COMMAND(list_sort, "Sort queue in ascending order by list_sort", "");
