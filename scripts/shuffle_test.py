@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import subprocess
 import re
 import random
@@ -5,8 +7,8 @@ from itertools import permutations
 import random
 
 # 測試 shuffle 次數
-test_count = 1000000
-input = "new\nit 1\nit 2\nit 3\nit 4\n"
+test_count = 30000000
+input = "new\nit 1\nit 2\nit 3\nit 4\nit 5\nit 6\n"
 for i in range(test_count):
     input += "shuffle\n"
 input += "free\nquit\n"
@@ -16,10 +18,10 @@ command='./qtest -v 3'
 clist = command.split()
 completedProcess = subprocess.run(clist, capture_output=True, text=True, input=input)
 s = completedProcess.stdout
-startIdx = s.find("l = [1 2 3 4]") 
+startIdx = s.find("l = [1 2 3 4 5 6]") 
 endIdx = s.find("l = NULL")
 s = s[startIdx + 14 : endIdx]
-Regex = re.compile(r'\d \d \d \d')
+Regex = re.compile(r'\d \d \d \d \d \d')
 result = Regex.findall(s)
 
 def permute(nums):
@@ -36,7 +38,7 @@ for i in result:
 
 # 找出全部的排序可能
 counterSet = {}
-shuffle_array = ['1', '2', '3', '4']
+shuffle_array = ['1', '2', '3', '4', '5', '6']
 s = permute(shuffle_array)
 
 # 初始化 counterSet
@@ -58,3 +60,17 @@ for i in c:
 print("Expectation: ", expectation)
 print("Observation: ", counterSet)
 print("chi square sum: ", chiSquaredSum)
+
+
+import matplotlib.pyplot as plt
+import numpy as np
+permutations = counterSet.keys()
+counts = counterSet.values()
+
+x = np.arange(len(counts))
+plt.bar(x, counts)
+plt.xticks(x, permutations)
+plt.xlabel('permutations')
+plt.ylabel('counts')
+plt.title('Shuffle result')
+plt.show()
