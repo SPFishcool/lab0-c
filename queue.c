@@ -291,7 +291,6 @@ void q_sort(struct list_head *head)
     cur->next = head;
     head->prev = cur;
 }
-
 /* Remove every node which has a node with a strictly greater value anywhere to
  * the right side of it */
 int q_descend(struct list_head *head)
@@ -314,8 +313,9 @@ int q_descend(struct list_head *head)
     return len;
 }
 
-/* Merge all the queues into one sorted queue, which is in ascending order */
-int q_merge(struct list_head *head)
+/* Merge all the queues into one sorted queue, which is in ascending/descending
+ * order */
+int q_merge(struct list_head *head, bool descend)
 {
     if (!head || list_empty(head))
         return 0;
